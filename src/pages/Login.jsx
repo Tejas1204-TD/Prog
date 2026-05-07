@@ -7,20 +7,41 @@ const demoCredentials = {
   password: 'kisan123',
 }
 
+function getCookie(name) {
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'))
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 function Login() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ identifier: '', password: '' })
   const [error, setError] = useState('')
 
+  const stored = (() => {
+    const raw = getCookie('kisan_user')
+    if (!raw) return null
+    try {
+      return JSON.parse(raw)
+    } catch (e) {
+      return null
+    }
+  })()
+
   const handleSubmit = (event) => {
     event.preventDefault()
 
-    const isValidLogin =
+    const validFromCookie =
+      stored &&
+      (form.identifier.trim() === stored.mobile ||
+        form.identifier.trim().toLowerCase() === stored.farmerName.trim().toLowerCase()) &&
+      form.password === stored.password
+
+    const validDemo =
       form.identifier.trim().toLowerCase() === demoCredentials.identifier &&
       form.password === demoCredentials.password
 
-    if (!isValidLogin) {
-      setError('Use the demo credentials shown below to continue.')
+    if (!validFromCookie && !validDemo) {
+      setError('Invalid credentials. Register first or use demo credentials.')
       return
     }
 
